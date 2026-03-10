@@ -14,24 +14,24 @@ figma.ui.onmessage = async function (msg) {
       return;
     }
 
-    // If a single group/frame is selected, export its children.
-    // Otherwise export the selection itself.
+    // Collect direct children of each selected group/frame.
+    // If a non-container node is selected directly, include it as-is.
     var nodes = [];
-    if (selection.length === 1 && "children" in selection[0]) {
-      var children = selection[0].children;
-      for (var c = 0; c < children.length; c++) {
-        nodes.push(children[c]);
-      }
-    } else {
-      for (var s = 0; s < selection.length; s++) {
-        nodes.push(selection[s]);
+    for (var s = 0; s < selection.length; s++) {
+      var sel = selection[s];
+      if ("children" in sel && sel.children.length > 0) {
+        for (var c = 0; c < sel.children.length; c++) {
+          nodes.push(sel.children[c]);
+        }
+      } else {
+        nodes.push(sel);
       }
     }
 
     if (nodes.length === 0) {
       figma.ui.postMessage({
         type: "error",
-        message: "The selected group has no children.",
+        message: "No exportable layers found in selection.",
       });
       return;
     }
@@ -61,11 +61,9 @@ figma.ui.onmessage = async function (msg) {
       }
     }
 
-    figma.ui.postMessage({
-      type: "download",
-      files: files,
-      zipName: sanitize(selection[0].name),
-    });
+    var zipName =
+      selection.length === 1 ? sanitize(selection[0].name) : "icons";
+    figma.ui.postMessage({ type: "download", files: files, zipName: zipName });
   }
 
   if (msg.type === "cancel") {
