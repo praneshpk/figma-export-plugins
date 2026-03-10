@@ -1,0 +1,7 @@
+{
+  "name": "Export Tokens (Style Dictionary)",
+  "id": "export-tokens-style-dictionary",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"]
+}
