@@ -109,6 +109,15 @@
     <script>
       var status = document.getElementById("status");
 
+      // Inject fill="currentColor" onto the root <svg> element.
+      // Strips any existing fill attribute on the <svg> tag first so we don't
+      // end up with fill="currentColor" fill="#000000" double-attributes.
+      function injectCurrentColor(svgText) {
+        return svgText
+          .replace(/(<svg\b[^>]*?)\s+fill="[^"]*"/, "$1")
+          .replace(/(<svg\b)/, '$1 fill="currentColor"');
+      }
+
       document.getElementById("exportBtn").onclick = function () {
         status.className = "";
         status.textContent = "Exporting...";
@@ -139,11 +148,23 @@
 
         if (msg.type === "download") {
           var files = msg.files;
+          var format = document.getElementById("format").value;
           status.textContent = "Zipping " + files.length + " file(s)...";
 
           var zip = new JSZip();
           for (var i = 0; i < files.length; i++) {
-            zip.file(files[i].name, new Uint8Array(files[i].bytes));
+            var file = files[i];
+
+            if (format === "SVG") {
+              // Decode bytes → string, patch fill, re-encode
+              var svgText = new TextDecoder().decode(
+                new Uint8Array(file.bytes),
+              );
+              svgText = injectCurrentColor(svgText);
+              zip.file(file.name, svgText);
+            } else {
+              zip.file(file.name, new Uint8Array(file.bytes));
+            }
           }
 
           zip.generateAsync({ type: "blob" }).then(function (blob) {
