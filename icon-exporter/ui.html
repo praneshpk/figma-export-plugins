@@ -113,9 +113,15 @@
       // Strips any existing fill attribute on the <svg> tag first so we don't
       // end up with fill="currentColor" fill="#000000" double-attributes.
       function injectCurrentColor(svgText) {
-        return svgText
-          .replace(/(<svg\b[^>]*?)\s+fill="[^"]*"/, "$1")
-          .replace(/(<svg\b)/, '$1 fill="currentColor"');
+        return (
+          svgText
+            // Remove fill from <svg> opening tag
+            .replace(/(<svg\b[^>]*?)\s+fill="[^"]*"/, "$1")
+            // Remove fill from all inner elements (path, circle, rect, etc.)
+            .replace(/(<(?!svg)\w+\b[^>]*?)\s+fill="(?!none)[^"]*"/g, "$1")
+            // Set fill="currentColor" on the root <svg>
+            .replace(/(<svg\b)/, '$1 fill="currentColor"')
+        );
       }
 
       document.getElementById("exportBtn").onclick = function () {
